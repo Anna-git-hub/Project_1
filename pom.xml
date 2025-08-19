@@ -51,7 +51,6 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <!-- Allure JUnit5 (для отчётов) -->
@@ -59,7 +58,6 @@
             <groupId>io.qameta.allure</groupId>
             <artifactId>allure-junit5</artifactId>
             <version>${allure.version}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

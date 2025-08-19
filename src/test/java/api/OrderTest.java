@@ -1,66 +1,118 @@
 package api;
 
 import clients.ApiClient;
-import com.github.javafaker.Faker;
-import io.restassured.RestAssured;
+import generators.OrdersGenerator;
 import io.restassured.response.Response;
 import models.*;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.Arrays;
+import java.util.stream.Stream;
 
-import static generators.UsersGenerator.randomUserRegister;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static generators.UsersGenerator.registerNewUserAndReturnAccessToken;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class OrderTest {
 
-    private static final Faker faker = new Faker();
-
     private final ApiClient apiClient = new ApiClient();
 
-    private static final String BASE_URL = "https://stellarburgers.nomoreparties.site/api";
     private String accessToken;
-    private String ingredient;
-    private int numOfIngredient = 0;
 
-    @BeforeAll
-    public static void setUpAll() {
-        RestAssured.baseURI = BASE_URL;
+    @BeforeEach
+    public void setUp() {
+        accessToken = registerNewUserAndReturnAccessToken();
     }
 
+    static Stream<Arguments> provideNegativeOrderData() {
+        String invalidIngredientId = "invalid_id_123";
+        String veryLongInvalidId = "x".repeat(100);
+        String nonExistentId = "999999999999999999999999";
+
+        return Stream.of(
+                Arguments.of(
+                        java.util.Collections.emptyList(),
+                        400,
+                        "Ingredient ids must be provided"
+                ),
+                Arguments.of(
+                        java.util.Arrays.asList(invalidIngredientId),
+                        500,
+                        "Internal Server Error"
+                ), Arguments.of(
+                        java.util.Arrays.asList(veryLongInvalidId),
+                        500,
+                        "Internal Server Error"
+                ),
+                Arguments.of(
+                        java.util.Arrays.asList(nonExistentId),
+                        400,
+                        "One or more ids provided are incorrect"
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "[{index}] ingredients={0} → status={1}, message={2}")
+    @MethodSource("provideNegativeOrderData")
+    @DisplayName("Негативные сценарии: создание заказа с некорректными данными")
+    void testCreateOrderNegativeScenarios(
+            java.util.List<String> ingredientIds,
+            int expectedStatus,
+            String expectedMessage) {
+
+        IngredientsRequest orderRequest = new IngredientsRequest().setIngredients(ingredientIds);
+
+        Response createResponse = apiClient.createOrder(orderRequest, accessToken);
+
+        assertEquals(expectedStatus, createResponse.statusCode());
+
+        if (expectedStatus == 400) {
+            assertEquals(expectedMessage, createResponse.path("message"));
+        }
+    }
 
     @Test
-    @DisplayName("Создание заказа")
-    public void shouldRegisterUserSuccessfully() {
-        RegisterUserRequest request = randomUserRegister();
+    @DisplayName("Позитивный сценарий: создание заказа")
+    public void shouldCreateOrderSuccessfully() {
+        IngredientsRequest ingredientsRequest = OrdersGenerator.generateOrderWithRandomIngredients();
 
-        Response response = apiClient.register(request);
+        Response orderResponse = apiClient.createOrder(ingredientsRequest, accessToken);
+        assertEquals(200, orderResponse.statusCode());
 
-        RegisterUserResponse registerUserResponse = response.as(RegisterUserResponse.class);
-        accessToken = registerUserResponse.getAccessToken();
+        CreateOrderResponse createOrderResponse = orderResponse.as(CreateOrderResponse.class);
 
-        Response ingredientsResponse = apiClient.getIngredients(accessToken);
-
-        IngredientsResponse ingredients = ingredientsResponse.as(IngredientsResponse.class);
-        numOfIngredient = ingredients.getData().size();
-        ingredient = ingredients.getData().get(faker.number().numberBetween(1, numOfIngredient)).get_id();
-
-        CreateOrderRequest orderRequest = new CreateOrderRequest()
-                .setIngredients(Arrays.asList(ingredient));
-
-        Response createOrderResponse = apiClient.createOrder(orderRequest,accessToken);
-
-        assertEquals(200, createOrderResponse.statusCode(),
-                "Ожидался статус 200, но получен " + createOrderResponse.statusCode() +
-                        ". Тело ответа: " + createOrderResponse.getBody().asString());
+        assertEquals(orderResponse.statusCode(), 200);
+        assertTrue(createOrderResponse.isSuccess());
     }
+
+@Test
+@DisplayName("Получение заказа пользователя")
+public void shouldGetUserOrderSuccessfully() {
+    IngredientsRequest ingredientsRequest = OrdersGenerator.generateOrderWithRandomIngredients();
+    apiClient.createOrder(ingredientsRequest, accessToken);
+
+    Response getOrdersResponse = apiClient.getUserOrders(accessToken);
+    assertEquals(200, getOrdersResponse.statusCode());
+    GetUserOrderResponse userOrders = getOrdersResponse.as(GetUserOrderResponse.class);
+
+    assertThat(userOrders.isSuccess(), is(true));
+    assertThat(userOrders.getOrders(), notNullValue());
+    assertThat(userOrders.getOrders(), hasSize(greaterThanOrEqualTo(1)));
+}
 
     @AfterEach
     public void tearDown() {
         if (accessToken != null) {
-            // Удаляем пользователя после каждого теста
-            apiClient.deleteUser(accessToken);
+            Response deleteResponse = apiClient.deleteUser(accessToken);
+
+            assertEquals(202, deleteResponse.statusCode());
+            assertEquals(deleteResponse.path("message").toString(), "User successfully removed");
         }
     }
 }

@@ -58,7 +58,7 @@ public class ApiClient {
     }
 
     @Step("Создание заказа")
-    public Response createOrder(CreateOrderRequest ingredients, String accessToken) {
+    public Response createOrder(IngredientsRequest ingredients, String accessToken) {
         return given()
                 .header("Content-Type", "application/json")
                 .header("Authorization", accessToken)
@@ -83,5 +83,20 @@ public class ApiClient {
                 .header("Authorization", accessToken)
                 .log().ifValidationFails()
                 .delete("/api/auth/user");
+    }
+
+    @Step("Получение заказов пользователя")
+    public Response getUserOrders(String accessToken) {
+        return given()
+                .header("Content-Type", "application/json")
+                .header("Authorization", accessToken)
+                .log().ifValidationFails()
+                .get("/api/orders");
+    }
+
+    public Response getIngredientsWithoutAuth() {
+        return given()
+                .header("Content-Type", "application/json")
+                .get("/api/ingredients");
     }
 }

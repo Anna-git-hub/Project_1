@@ -5,14 +5,19 @@ import java.util.List;
 public class IngredientsResponse {
 
     private boolean success;
-    private List<Data> data;
+    private List<Ingredient> data;
+    private String message;
 
     public boolean isSuccess() {
         return success;
     }
 
-    public List<Data> getData() {
+    public List<Ingredient> getData() {
         return data;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     @Override
