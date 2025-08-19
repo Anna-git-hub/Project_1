@@ -9,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import static generators.UsersGenerator.registerNewUserAndReturnAccessToken;
@@ -42,16 +43,16 @@ public class OrderTest {
                         "Ingredient ids must be provided"
                 ),
                 Arguments.of(
-                        java.util.Arrays.asList(invalidIngredientId),
+                        List.of(invalidIngredientId),
                         500,
                         "Internal Server Error"
                 ), Arguments.of(
-                        java.util.Arrays.asList(veryLongInvalidId),
+                        List.of(veryLongInvalidId),
                         500,
                         "Internal Server Error"
                 ),
                 Arguments.of(
-                        java.util.Arrays.asList(nonExistentId),
+                        List.of(nonExistentId),
                         400,
                         "One or more ids provided are incorrect"
                 )
