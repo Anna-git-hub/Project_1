@@ -72,6 +72,7 @@ public class OrderTest {
         Response createResponse = apiClient.createOrder(orderRequest, accessToken);
 
         assertEquals(expectedStatus, createResponse.statusCode());
+        assertEquals(expectedMessage, createResponse.path("message"));
     }
 
     @Test
