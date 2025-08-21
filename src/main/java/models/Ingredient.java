@@ -8,7 +8,6 @@ public class Ingredient {
 
     @JsonProperty("_id")
     private String id;
-
     private String name;
     private String type;
     private int proteins;
@@ -17,13 +16,12 @@ public class Ingredient {
     private int calories;
     private int price;
     private String image;
-    private String image_mobile;
-    private String image_large;
-    private int __v;
+    private String imageMobile;
+    private String imageLarge;
     @JsonProperty("__v")
     private int v;
 
-    public String get_id() { return id; }
+    public String getId() { return id; }
     public String getName() { return name; }
     public String getType() { return type; }
     public int getProteins() { return proteins; }
@@ -32,7 +30,7 @@ public class Ingredient {
     public int getCalories() { return calories; }
     public int getPrice() { return price; }
     public String getImage() { return image; }
-    public String getImage_mobile() { return image_mobile; }
-    public String getImage_large() { return image_large; }
-    public int get__v() { return v; }
+    public String getImageMobile() { return imageMobile; }
+    public String getImageLarge() { return imageLarge; }
+    public int getV() { return v; }
 }

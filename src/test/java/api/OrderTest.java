@@ -45,11 +45,11 @@ public class OrderTest {
                 Arguments.of(
                         List.of(invalidIngredientId),
                         500,
-                        "Internal Server Error"
+                        null
                 ), Arguments.of(
                         List.of(veryLongInvalidId),
                         500,
-                        "Internal Server Error"
+                        null
                 ),
                 Arguments.of(
                         List.of(nonExistentId),
@@ -63,7 +63,7 @@ public class OrderTest {
     @MethodSource("provideNegativeOrderData")
     @DisplayName("Негативные сценарии: создание заказа с некорректными данными")
     void testCreateOrderNegativeScenarios(
-            java.util.List<String> ingredientIds,
+            List<String> ingredientIds,
             int expectedStatus,
             String expectedMessage) {
 
@@ -73,7 +73,7 @@ public class OrderTest {
 
         assertEquals(expectedStatus, createResponse.statusCode());
 
-        if (expectedStatus == 400) {
+        if (expectedMessage != null) {
             assertEquals(expectedMessage, createResponse.path("message"));
         }
     }

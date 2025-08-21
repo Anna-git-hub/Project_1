@@ -35,7 +35,7 @@ public class OrdersGenerator {
 
         while (uniqueIds.size() < randomCount) {
             Ingredient randomIngredient = ingredients.get(faker.number().numberBetween(0, ingredients.size()));
-            uniqueIds.add(randomIngredient.get_id());
+            uniqueIds.add(randomIngredient.getId());
         }
 
         return new IngredientsRequest()
